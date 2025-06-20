@@ -74,7 +74,7 @@ def nested_dict(n, type):
     if n == 1:
         return defaultdict(type)
     else:
-        return defaultdict(lambda: nested_dict(n - 1, type))
+        return defaultdict(lambda: nested_dict(n-1, type))
 
 
 # InsecureRequestWarning: Unverified HTTPS request is being made.
@@ -234,8 +234,8 @@ class IQOptionAPI(object):  # pylint: disable=too-many-instance-attributes
         """
         logger = logging.getLogger(__name__)
 
-        logger.debug(method + ": " + url + " headers: " + str(self.session.headers) +
-                     " cookies:  " + str(self.session.cookies.get_dict()))
+        logger.debug(method+": "+url+" headers: "+str(self.session.headers) +
+                     " cookies: "+str(self.session.cookies.get_dict()))
 
         response = self.session.request(method=method,
                                         url=url,
@@ -265,18 +265,21 @@ class IQOptionAPI(object):  # pylint: disable=too-many-instance-attributes
         :param str name: The websocket request name.
         :param dict msg: The websocket request msg.
         """
-
         logger = logging.getLogger(__name__)
-
-        data = json.dumps(dict(name=name,
-                               msg=msg, request_id=request_id))
-
+        data = json.dumps(dict(name=name, msg=msg, request_id=request_id))
         while (global_value.ssl_Mutual_exclusion or global_value.ssl_Mutual_exclusion_write) and no_force_send:
             pass
-        global_value.ssl_Mutual_exclusion_write = True
-        self.websocket.send(data)
-        logger.debug(data)
-        global_value.ssl_Mutual_exclusion_write = False
+        try:
+            global_value.ssl_Mutual_exclusion_write = True
+            self.websocket.send(data)
+            logger.debug(data)
+            global_value.ssl_Mutual_exclusion_write = False
+        except:
+            logging.exception('Erro ao enviar solicitação ao websocket da IQ: ')
+            raise
+            # logging.info('Conectando novamente em 3 segundos...')
+            # time.sleep(3)
+            # self.connect()
 
     @property
     def logout(self):
@@ -415,7 +418,6 @@ class IQOptionAPI(object):  # pylint: disable=too-many-instance-attributes
         """
         return Getprofile(self)
 # for active code ...
-
     @property
     def get_balances(self):
         """Property for get IQ Option http getprofile resource.
@@ -443,7 +445,6 @@ class IQOptionAPI(object):  # pylint: disable=too-many-instance-attributes
         """
         return Ssid(self)
 # --------------------------------------------------------------------------------
-
     @property
     def Subscribe_Live_Deal(self):
         return Subscribe_live_deal(self)
@@ -674,9 +675,9 @@ class IQOptionAPI(object):  # pylint: disable=too-many-instance-attributes
 # ____________________for_______digital____________________
 
     def get_digital_underlying(self):
-        msg = {"name": "get-underlying-list",
-               "version": "2.0",
-               "body": {"type": "digital-option"}
+        msg = {"name": "digital-option-instruments.get-underlying-list",
+               "version": "3.0",
+               "body": {"filter_suspended": True}
                }
         self.send_websocket_request(name="sendMessage", msg=msg)
 
@@ -810,7 +811,7 @@ class IQOptionAPI(object):  # pylint: disable=too-many-instance-attributes
         try:
             if self.token_login2fa is None:
                 response = self.login(
-                    self.username, self.password)  # pylint: disable=not-callable
+                    self.username, self.password)# pylint: disable=not-callable
             else:
                 response = self.login_2fa(
                     self.username, self.password, self.token_login2fa)
@@ -922,7 +923,7 @@ class IQOptionAPI(object):  # pylint: disable=too-many-instance-attributes
     @property
     def unsubscribe_digital_price_splitter(self):
         return UnsubscribeDigitalPriceSplitter(self)
-
+    
     @property
     def place_digital_option_v2(self):
         return DigitalOptionsPlaceDigitalOptionV2(self)
